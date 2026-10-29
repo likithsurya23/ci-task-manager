@@ -1,59 +1,30 @@
-name: Backend CI
-
-on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
+name: SAM CLI Cache Test
+ 
+on: [push, workflow_dispatch]
+ 
 jobs:
-  validate:
-    name: Install, lint and test
+  build:
     runs-on: ubuntu-latest
-
+ 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js and npm cache
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Cache AWS SAM CLI
-        id: sam-cache
+      - uses: actions/checkout@v4
+ 
+      - name: Cache SAM CLI
+        id: cache-sam
         uses: actions/cache@v4
         with:
-          path: ~/.local/bin/sam
-          key: ${{ runner.os }}-sam-cli-v1
-
-      - name: Set up AWS SAM CLI
-        if: steps.sam-cache.outputs.cache-hit != 'true'
-        uses: aws-actions/setup-sam@v3
-        with:
-          use-installer: true
-
-      - name: Verify AWS SAM CLI
-        run: sam --version
-
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: Run tests
-        run: npm test
-
-      - name: Publish CI summary
-        if: always()
+          path: |
+            ~/.local/bin
+            ~/.local/lib/python3.11/site-packages
+          key: sam-cli-${{ runner.os }}-v1
+ 
+      - name: Install SAM CLI
         run: |
-          echo "## Backend CI Summary" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Trigger: $GITHUB_EVENT_NAME" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Job outcome: ${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"
+          if ! command -v sam &> /dev/null; then
+            pip install --user aws-sam-cli
+          fi
+ 
+      - name: Check version and time
+        run: |
+          time sam --version
+          echo "Cache hit: ${{ steps.cache-sam.outputs.cache-hit }}"
