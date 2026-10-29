@@ -1,0 +1,19 @@
+{
+  "name": "ci-task-manager",
+  "version": "1.0.0",
+  "description": "Task API demonstrating response caching and GitHub Actions CI",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "node-cache": "^5.1.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.28.0"
+  }
+}
